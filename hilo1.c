@@ -87,11 +87,11 @@ Dato* agregarEspacio(Dato** datos, int largoActual, Dato* nuevoDato) //verificar
   int i = 0;
   while(i < largoActual)
   {
-    newDatos[i].u = datos[i].u;
-    newDatos[i].v = datos[i].v;
-    newDatos[i].real = datos[i].real;
-    newDatos[i].imag = datos[i].imag;
-    newDatos[i].ruido = datos[i].ruido;
+    newDatos[i].u = datos[i][0];
+    newDatos[i].v = datos[i][1];
+    newDatos[i].real = datos[i][2];
+    newDatos[i].imag = datos[i][3];
+    newDatos[i].ruido = datos[i][4];
   }
 
   newDatos[i].u = nuevoDato[i].u;
@@ -109,7 +109,7 @@ Hebra** procesarDatos(Hebra** hebras, double** datos, int largo, int c_discos, i
   int cont = 0;
   for (int i = 0; i < largo; i++)
   {
-    disco = calcularDisco(datos[i].u, datos[i].v);
+    disco = calcularDisco(datos[i][0], datos[i][1]);
     disco = trunc(disco / anchoDisco);
 
     if (disco >= c_discos)
@@ -157,8 +157,8 @@ void* imprimirDatos(void* param)
 
 int main(int argc, char const *argv[])
 {
-  Hebra* hebra = (Hebra*) malloc(sizeof(Hebra));
 
+  Hebra* hebra = (Hebra*) malloc(sizeof(Hebra));
 
   hebra -> datos[0] = 11;
   hebra -> datos[1] = 22;
