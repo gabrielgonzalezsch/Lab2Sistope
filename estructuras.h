@@ -26,7 +26,7 @@ typedef struct datos
 
 typedef struct hebras
 {
-  Dato dato[0];
+  Dato** dato;
   int datos[5]; // prueba
   int resultados[5]; //prueba
   int y; //prueba
