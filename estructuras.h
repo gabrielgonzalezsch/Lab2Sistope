@@ -6,14 +6,6 @@
 #include <string.h>
 #include <pthread.h>
 
-typedef struct hijos // Estructura que Guardar los datos del fichero de entrada
-{
-  int pid;
-  int visibilidades;
-  int pipeA[2];
-  int pipeB[2];
-  int ver;
-} Hijo;
 
 typedef struct datos
 {
@@ -26,9 +18,19 @@ typedef struct datos
 
 typedef struct hebras
 {
+  int id;
   Dato** dato;
+  int largo;
+  int bandera;
+  double mediaReal;
+  double mediaImag;
+  double potenciaTotal;
+  double ruidoTotal;
+
+
   int datos[5]; // prueba
   int resultados[5]; //prueba
   int y; //prueba
+
   pthread_mutex_t mutex; //prueba, pero podria servir
 } Hebra;

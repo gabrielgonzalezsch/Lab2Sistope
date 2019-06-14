@@ -1,4 +1,3 @@
-
 #include <unistd.h>
 #include <ctype.h>
 #include <stdio.h>
@@ -8,70 +7,52 @@
 #include <math.h>
 #include "estructuras.h"
 
-
-//solo se puede recibir un argumento al parecer
-void* calcularMediaReal(void* param1, void* param2)
+double calcularMediaReal(Dato** datos, int cantidad_datos)
 {
-  double** datos = (double**) param1;
-  int cantidad_datos = (int) param2;
-
   double resultadoMediaReal = 0;
   for (int i = 0; i < cantidad_datos; i++)
   {
-    resultadoMediaReal = datos[i][2] + resultadoMediaReal;
+    resultadoMediaReal = datos[i] -> real + resultadoMediaReal;
   }
 
   resultadoMediaReal = resultadoMediaReal/cantidad_datos;
-  //return resultadoMediaReal; guardar esto en la estructura de datos
+  return resultadoMediaReal;
 }
 
-
-void* calcularMediaImaginaria(void* param1, void* param2)
+double calcularMediaImaginaria(Dato** datos,int cantidad_datos)
 {
-  double** datos = (double**) param1;
-  int cantidad_datos = (int) param2;
-
   double resultadoMediaImaginaria = 0;
   for (int i = 0; i < cantidad_datos; i++)
   {
-    resultadoMediaImaginaria = datos[i][3] + resultadoMediaImaginaria;
+    resultadoMediaImaginaria = datos[i] -> imag + resultadoMediaImaginaria;
   }
 
   resultadoMediaImaginaria = resultadoMediaImaginaria/cantidad_datos;
-  //return resultadoMediaImaginaria; guardar esto en la estructura de datos
+  return resultadoMediaImaginaria;
 }
 
-
-void* calcularPotenciaTotal(void* param1, void* param2)
+double calcularPotenciaTotal(Dato** datos,int cantidad_datos)
 {
-  double** datos = (double**) param1;
-  int cantidad_datos = (int) param2;
-
   double resultadoPotenciaTotal = 0;
   for (int i = 0; i < cantidad_datos; i++)
   {
-    double potencia = sqrt( (datos[i][2] * datos[i][2]) + (datos[i][3] * datos[i][3]) );
+    double potencia = sqrt( (datos[i] -> real * datos[i] -> real) + (datos[i] -> imag * datos[i] -> imag) );
     resultadoPotenciaTotal = potencia + resultadoPotenciaTotal;
   }
-  //return resultadoPotenciaTotal; guardar esto en la estructura de datos
+  return resultadoPotenciaTotal;
 }
 
-
-void* calcularRuidoTotal(void* param1, void* param2)
+double calcularRuidoTotal(Dato** datos,int cantidad_datos)
 {
-  double** datos = (double**) param1;
-  int cantidad_datos = (int) param2;
-
   double resultadoRuidoTotal = 0;
   for (int i = 0; i < cantidad_datos; i++)
   {
-    resultadoRuidoTotal = datos[i][4] + resultadoRuidoTotal;
+    resultadoRuidoTotal = datos[i] -> ruido + resultadoRuidoTotal;
   }
-  //return resultadoRuidoTotal;  guardar esto en la estructura de datos
+  return resultadoRuidoTotal;
 }
 
-
-double** agregarEspacio(double** datos, double* nuevo, int largo)
+double** agregarEspacio(double** datos,double* nuevo, int largo)
 {
   double** nuevaLista = (double**) malloc(sizeof(double) * (largo +1 ));
 
@@ -104,75 +85,14 @@ double** agregarEspacio(double** datos, double* nuevo, int largo)
   return nuevaLista;
 }
 
-// Cambiar este main
-int main(){
+void* procesarDatos(void* param){
 
-    double nuevo[6];
-    double** datos = (double**) malloc(sizeof(double));
-    int largo = 0;
-    int flag = 0;
+    Hebra* hebra = (Hebra*) param;
 
-    while (flag == 0)
-    {
-
-      //read(STDIN_FILENO, &nuevo, sizeof(nuevo));
-
-      if (nuevo[5] < 0)
-      {
-
-        // CALCULAR Y DEVOLVER RESULTADOS
-        //######################################################################################
-        double resultados[5];
-
-        resultados[0] = 0;
-        resultados[1] = 0;
-        resultados[2] = 0;
-        resultados[3] = 0;
-        resultados[4] = 0;
-
-        if (datos != NULL)
-        {
-          double mediaReal;
-          double mediaImaginaria;
-          double potenciaTotal;
-          double ruidoTotal;
-          // Hacer calculos
-          mediaReal = calcularMediaReal(datos, largo);
-          mediaImaginaria = calcularMediaImaginaria(datos, largo);
-          potenciaTotal = calcularPotenciaTotal(datos, largo);
-          ruidoTotal = calcularRuidoTotal(datos, largo);
-          // Guardar valores en estructura
-          resultados[0]  = mediaReal;
-          resultados[1]  = mediaImaginaria;
-          resultados[2]  = potenciaTotal;
-          resultados[3]  = ruidoTotal;
-          resultados[4]  = datos[0][5];
-
-          if (nuevo[0] != 0)
-          {
-            fprintf(stderr, "Soy el hijo de pid %d, procese %d visibilidades\n", getpid(), largo);
-          }
-
-
-          write(STDOUT_FILENO, &resultados, sizeof(resultados));
-
-          flag = 1;
-          break;
-        }
-        else
-        {
-          fprintf(stderr, "CASO NULO");
-          exit(0);
-        }
-
-      }
-      else
-      {
-        datos = agregarEspacio(datos, nuevo, largo);
-        largo++;
-      }
-
-    }
+    hebra -> mediaReal = calcularMediaReal(hebra -> dato, hebra -> largo);
+    hebra -> mediaImag = calcularMediaImaginaria(hebra -> dato, hebra -> largo);
+    hebra -> potenciaTotal = calcularPotenciaTotal(hebra -> dato, hebra -> largo);
+    hebra -> ruidoTotal = calcularRuidoTotal(hebra -> dato, hebra -> largo);
 
     return 0;
 }
