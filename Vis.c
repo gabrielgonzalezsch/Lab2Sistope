@@ -7,6 +7,7 @@
 #include <math.h>
 #include "estructuras.h"
 
+
 double calcularMediaReal(Dato** datos, int cantidad_datos)
 {
   double resultadoMediaReal = 0;
@@ -52,47 +53,20 @@ double calcularRuidoTotal(Dato** datos,int cantidad_datos)
   return resultadoRuidoTotal;
 }
 
-double** agregarEspacio(double** datos,double* nuevo, int largo)
+void* procesarDatos(void* param)
 {
-  double** nuevaLista = (double**) malloc(sizeof(double) * (largo +1 ));
 
-  for (int i = 0; i < largo+1; i++)
-  {
-    nuevaLista[i] = (double*) malloc(sizeof(double) * 6);
-  }
 
-  int i = 0;
-  while (i < largo)
-  {
-    nuevaLista[i][0] = datos[i][0];
-    nuevaLista[i][1] = datos[i][1];
-    nuevaLista[i][2] = datos[i][2];
-    nuevaLista[i][3] = datos[i][3];
-    nuevaLista[i][4] = datos[i][4];
-    nuevaLista[i][5] = datos[i][5];
-    i++;
-  }
+  Hebra* hebra = (Hebra*) param;
 
-  nuevaLista[i][0] = nuevo[0];
-  nuevaLista[i][1] = nuevo[1];
-  nuevaLista[i][2] = nuevo[2];
-  nuevaLista[i][3] = nuevo[3];
-  nuevaLista[i][4] = nuevo[4];
-  nuevaLista[i][5] = nuevo[5];
+  hebra -> mediaReal = calcularMediaReal(hebra -> dato, hebra -> largo);
+  hebra -> mediaImag = calcularMediaImaginaria(hebra -> dato, hebra -> largo);
+  hebra -> potenciaTotal = calcularPotenciaTotal(hebra -> dato, hebra -> largo);
+  hebra -> ruidoTotal = calcularRuidoTotal(hebra -> dato, hebra -> largo);
 
-  free(datos);
+  pthread_mutex_lock(&hebra -> mutex);
 
-  return nuevaLista;
-}
+  printf("soy la hebra %d y procese %d datos.\n", hebra -> id, hebra -> largo);
 
-void* procesarDatos(void* param){
-
-    Hebra* hebra = (Hebra*) param;
-
-    hebra -> mediaReal = calcularMediaReal(hebra -> dato, hebra -> largo);
-    hebra -> mediaImag = calcularMediaImaginaria(hebra -> dato, hebra -> largo);
-    hebra -> potenciaTotal = calcularPotenciaTotal(hebra -> dato, hebra -> largo);
-    hebra -> ruidoTotal = calcularRuidoTotal(hebra -> dato, hebra -> largo);
-
-    return 0;
+  pthread_mutex_unlock(&hebra -> mutex);
 }

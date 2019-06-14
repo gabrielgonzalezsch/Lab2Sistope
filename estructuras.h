@@ -26,11 +26,6 @@ typedef struct hebras
   double mediaImag;
   double potenciaTotal;
   double ruidoTotal;
+  pthread_mutex_t* mutex;
 
-
-  int datos[5]; // prueba
-  int resultados[5]; //prueba
-  int y; //prueba
-
-  pthread_mutex_t mutex; //prueba, pero podria servir
 } Hebra;

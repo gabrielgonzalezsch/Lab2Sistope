@@ -5,6 +5,8 @@
 #include <math.h>
 #include "funciones.h"
 
+pthread_mutex_t *mutex;
+
 
 int main(int argc, char const *argv[])
 {
@@ -17,6 +19,7 @@ int main(int argc, char const *argv[])
   int largo;
 
   Hebra** hebras = (Hebra**) malloc(sizeof(Hebra*) * c_discos);  //10 = c_discos
+  pthread_t hilo[c_discos];
 
   for (int i = 0; i < c_discos; i++) {
     hebras[i] = (Hebra*) malloc(sizeof(Hebra));
@@ -27,48 +30,28 @@ int main(int argc, char const *argv[])
     hebras[i] -> potenciaTotal = 0;
     hebras[i] -> ruidoTotal = 0;
     hebras[i] -> bandera = bandera;
+    hebras[i] -> mutex = mutex;
   }
 
+  //pthread_mutex_init(&mutex, NULL);
 
   largo =  largoArchivo(nombre);
+
   double** datos = leerDatos(nombre, largo);
 
   hebras = repartirDatos(hebras, datos, largo, c_discos, anchoDisco);
 
-  pthread_t hilo[c_discos];
+  free(datos);
+  
 
   int i = 0;
   while (i < c_discos)
   {
-    pthread_create(&hilo[i], NULL, procesarDatos()/*Funcion qla*/, /* parametro qlo */)
+    //pthread_mutex_lock(&mutex);
+    pthread_create(&hilo[i], NULL, procesarDatos, (void *) hebras[i]);
+    //pthread_mutex_unlock(&mutex);
+    i++;
   }
-
-
-
-  Hebra* hebra = (Hebra*) malloc(sizeof(Hebra));
-
-  hebra -> datos[0] = 11;
-  hebra -> datos[1] = 22;
-  hebra -> datos[2] = 33;
-  hebra -> datos[3] = 44;
-  hebra -> datos[4] = 55;
-  hebra -> y = 3;
-
-  /*
-  pthread_mutex_init(&hebra -> mutex, NULL);
-
-  printf("antes de definir y crear thread\n");
-
-  //pthread_t hilo;  //definit hilo/hebra
-
-  pthread_create(&hilo, NULL, &procesarDatosSimples, (void*) hebra);
-
-  pthread_create(&hilo, NULL, &imprimirDatos, (void*) hebra);
-
-  pthread_join(hilo, NULL);
-
-  printf("final\n");
-  */
 
   return 0;
 }

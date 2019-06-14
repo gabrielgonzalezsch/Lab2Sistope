@@ -106,7 +106,7 @@ Dato** agregarEspacio(Dato** datoHebras, int largoActual, double* nuevoDato) //v
     printf("imag: %f\n", newDatos[i] -> imag);
     printf("ruido: %f\n", newDatos[i] -> ruido);
     printf("##############\n");
-    */s
+    */
     i++;
 
   }
@@ -137,8 +137,11 @@ Hebra** repartirDatos(Hebra** hebras, double** datos, int largo, int c_discos, i
     hebras[posicion] -> dato = agregarEspacio(hebras[posicion] -> dato, hebras[posicion] -> largo, datos[i]);
     hebras[posicion] -> largo ++;
   }
+
+  return hebras;
 }
 
+/*
 void* procesarDatosSimples(void* param1)
 {
 
@@ -171,3 +174,4 @@ void* imprimirDatos(void* param)
   pthread_mutex_unlock(&x -> mutex);
 
 }
+*/
