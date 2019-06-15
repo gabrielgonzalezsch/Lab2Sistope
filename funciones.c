@@ -30,116 +30,200 @@ int largoArchivo(char* nombre)
 //Entrada: enteros u y v
 //Funcionamiento: calcula la norma de < u,v >
 //Salida: la norma de < u,v >
-double calcularDisco(int u, int v)
-{
-  return (sqrt(u*u+v*v));
-}
+int calcularDisco(double u,double v,double ancho, int c_discos){
 
-double** leerDatos(char* nombre,int largo)
-{
+  double disco = sqrt(u*u+v*v);
+  int disco2 = trunc(disco/ancho);
 
-    FILE* archivo = fopen(nombre,"r");
-
-    int cont = 0;
-    double u;
-    double v;
-    double real;
-    double imag;
-    double ruido;
-    double disco;
-    char c1,c2,c3,c4;
-    double** datos = (double**) malloc(sizeof(double) * largo);
-
-    for (int i = 0; i < largo; i++) {
-      datos[i] = (double*) malloc(sizeof(double) * 5);
-    }
-
-    // Aqui se lee el archivo guardando cada linea en el atributo dato de cada hebra
-    while(!feof(archivo))
-    {
-
-        u = 0;
-        v = 0;
-        real = 0;
-        imag = 0;
-        ruido = 0;
-
-        fscanf(archivo, "%lf %c %lf %c %lf %c %lf %c %lf", &u,&c1,&v,&c2,&real,&c3,&imag,&c4,&ruido);
-
-        //printf("%lf %lf %lf %lf %lf\n", u,v,real,imag,ruido);
-
-        datos[cont][0] = u;
-        datos[cont][1] = v;
-        datos[cont][2] = real;
-        datos[cont][3] = imag;
-        datos[cont][4] = ruido;
-        cont++;
-
-    }
-
-    return datos;
-
-}
-
-Dato** agregarEspacio(Dato** datoHebras, int largoActual, double* nuevoDato) //verificar punteros
-{
-  Dato** newDatos = (Dato**) malloc(sizeof(Dato*) * (largoActual + 1));
-  for (int i = 0; i < (largoActual + 1); i++)
-  {
-    newDatos[i] = (Dato*) malloc(sizeof(Dato));
-  }
-
-  int i = 0;
-  while(i < largoActual)
-  {
-    newDatos[i] -> u = datoHebras[i] -> u;
-    newDatos[i] -> v = datoHebras[i] -> v;
-    newDatos[i] -> real = datoHebras[i] -> real;
-    newDatos[i] -> imag = datoHebras[i] -> imag;
-    newDatos[i] -> ruido = datoHebras[i] -> ruido;
-    /*
-    printf("##############\n");
-    printf("dato: %d\n", i);
-    printf("u: %f\n", newDatos[i] -> u);
-    printf("v: %f\n", newDatos[i] -> v);
-    printf("real: %f\n", newDatos[i] -> real);
-    printf("imag: %f\n", newDatos[i] -> imag);
-    printf("ruido: %f\n", newDatos[i] -> ruido);
-    printf("##############\n");
-    */
-    i++;
+  if (disco2 >= c_discos) {
+    disco2 = c_discos-1;
 
   }
+  return disco2;
 
-  newDatos[i] -> u = nuevoDato[0];
-  newDatos[i] -> v = nuevoDato[1];
-  newDatos[i] -> real = nuevoDato[2];
-  newDatos[i] -> imag = nuevoDato[3];
-  newDatos[i] -> ruido = nuevoDato[4];
-
-  return newDatos;
 }
 
-Hebra** repartirDatos(Hebra** hebras, double** datos, int largo, int c_discos, int anchoDisco)
+void imprimirDatos(Monitor* monitor)
 {
-  double disco;
-  int posicion = -1;
-  for (int i = 0; i < largo; i++)
+  for (int i = 0; i < monitor -> cantidad_datos; i++)
   {
-    disco = calcularDisco(datos[i][0], datos[i][1]);
-    posicion = (int) trunc(disco / anchoDisco);
+    printf("#########\n");
+    printf("##real: %f\n", monitor -> buffer[i] -> real);
+    printf("##imag: %f\n", monitor -> buffer[i] -> imag);
+    printf("##ruido: %f\n", monitor -> buffer[i] -> ruido);
+  }
+}
 
-    if (posicion >= c_discos)
-    {
-      posicion = c_discos - 1;
+//Consumidor
+void* procesarDatos(void* monitor_param){   /// FUNCION QUE UTILIZA LA HEBRA HIJA
+
+  Monitor* monitor = (Monitor*)monitor_param;
+  double sumReal = 0;
+  double sumImag = 0;
+  double sumRuido = 0;
+  int datosTotales = 0;
+  Resultado* resultados = (Resultado*) malloc(sizeof(Resultado));
+
+  while(1){
+    //printf("HOLA");
+    //pthread_mutex_lock(&monitor -> mutex);
+
+    if (monitor -> bandera == 0) {
+    //  printf("INFO: %d,%d,%d\n",monitor->id,monitor->cantidad_datos,monitor->bandera);
+      //printf("ME MUERO\n ");
+
+      pthread_cond_wait(&monitor -> bufferNotFull, &monitor -> mutex);
     }
 
-    hebras[posicion] -> dato = agregarEspacio(hebras[posicion] -> dato, hebras[posicion] -> largo, datos[i]);
-    hebras[posicion] -> largo ++;
+    else if(monitor->bandera == 1){
+
+      //pthread_cond_signal(&monitor -> bufferNotFull);
+      //printf("INFO: %d,%d,%d\n",monitor->id,monitor->cantidad_datos,monitor->bandera);
+      //printf("BANDERA == 1\n");
+      //imprimirDatos(monitor);
+      for (int i = 0; i < monitor -> cantidad_datos; i++)
+      {
+        sumReal = sumReal + monitor -> buffer[i] -> real;
+        sumImag = sumImag + monitor -> buffer[i] -> imag;
+        sumRuido = sumRuido + monitor -> buffer[i] -> ruido;
+        //printf("ME quier conaa\n ");
+
+      }
+      datosTotales = datosTotales + monitor -> cantidad_datos;
+      /*
+      printf("final monitor id: %d\n", monitor -> id);
+      printf("sumaReal: %f\n", sumReal);
+      printf("sumaImag: %f\n", sumImag);
+      printf("sumaRuido: %f\n", sumRuido);
+      */
+      for (int i = 0; i < monitor -> cantidad_datos; i++)
+      {
+        //printf("RIP\n ");
+        monitor -> buffer[i]-> real = 0;
+        //printf("holi3\n");
+        monitor -> buffer[i] -> imag = 0;
+        //printf("holi4\n");
+        monitor -> buffer[i] -> ruido = 0;
+        //printf("holi5\n");
+        monitor -> cantidad_datos = 0;
+      }
+      //printf("RIP\n ");
+
+      pthread_cond_signal(&monitor -> bufferNotEmpty);
+      //pthread_mutex_unlock(&monitor -> mutex);
+
+      monitor -> bandera = 0;
+      //pthread_cond_wait(&monitor -> bufferNotFull, &monitor -> mutex);
+
+    }
+
+    else if(monitor -> bandera == 2){
+      printf("BANDERA == 2\n");
+      imprimirDatos(monitor);
+      printf("INFO: %d,%d,%d\n",monitor->id,monitor->cantidad_datos,monitor->bandera);
+      //ultima lectura
+      for (int i = 0; i < monitor -> cantidad_datos; i++)
+      {
+        sumReal = sumReal + monitor -> buffer[i] -> real;
+        sumImag = sumImag + monitor -> buffer[i] -> imag;
+        sumRuido = sumRuido + monitor -> buffer[i] -> ruido;
+      }
+
+      datosTotales = datosTotales + monitor -> cantidad_datos;
+
+      resultados -> mediaReal = sumReal/datosTotales;
+      resultados -> mediaImag = sumImag/datosTotales;
+      resultados -> ruidoTotal = sumRuido;
+      resultados -> potenciaTotal = sqrt((sumReal*sumReal)+(sumImag*sumImag));
+
+      /*
+      printf("final monitor id: %d\n", monitor -> id);
+      printf("sumaReal: %f\n", sumReal);
+      printf("sumaImag: %f\n", sumImag);
+      printf("sumaRuido: %f\n", sumRuido);
+        */
+      break;
+    }
+
   }
 
-  return hebras;
+  printf("matando hebra\n");
 }
+/*
+  printf("soy la hebra %d.\n", monitor -> id);
+  printf("u: %f\n", monitor -> buffer -> u);
+  printf("v: %f\n", monitor -> buffer -> v);
+  printf("real: %f\n", monitor -> buffer -> real);
+  printf("imag: %f\n", monitor -> buffer -> imag);
+  printf("ruido: %f\n", monitor -> buffer -> ruido);
+*/
+  /*Hebra* hebra = (Hebra*) param;
+
+  hebra -> mediaReal = calcularMediaReal(hebra -> dato, hebra -> largo);
+  hebra -> mediaImag = calcularMediaImaginaria(hebra -> dato, hebra -> largo);
+  hebra -> potenciaTotal = calcularPotenciaTotal(hebra -> dato, hebra -> largo);
+  hebra -> ruidoTotal = calcularRuidoTotal(hebra -> dato, hebra -> largo);*/
+
+  //pthread_mutex_lock(&hebra -> mutex);
+
+  //pthread_mutex_unlock(&hebra -> mutex);
+
+
+
+
+
+
+
+/*double calcularMediaReal(Dato** datos, int cantidad_datos)
+{
+  double resultadoMediaReal = 0;
+  for (int i = 0; i < cantidad_datos; i++)
+  {
+    resultadoMediaReal = datos[i] -> real + resultadoMediaReal;
+  }
+
+  resultadoMediaReal = resultadoMediaReal/cantidad_datos;
+  return resultadoMediaReal;
+}
+
+double calcularMediaImaginaria(Dato** datos,int cantidad_datos)
+{
+  double resultadoMediaImaginaria = 0;
+  for (int i = 0; i < cantidad_datos; i++)
+  {
+    resultadoMediaImaginaria = datos[i] -> imag + resultadoMediaImaginaria;
+  }
+
+  resultadoMediaImaginaria = resultadoMediaImaginaria/cantidad_datos;
+  return resultadoMediaImaginaria;
+}
+
+double calcularPotenciaTotal(Dato** datos,int cantidad_datos)
+{
+  double resultadoPotenciaTotal = 0;
+  for (int i = 0; i < cantidad_datos; i++)
+  {
+    double potencia = sqrt( (datos[i] -> real * datos[i] -> real) + (datos[i] -> imag * datos[i] -> imag) );
+    resultadoPotenciaTotal = potencia + resultadoPotenciaTotal;
+  }
+  return resultadoPotenciaTotal;
+}
+
+double calcularRuidoTotal(Dato** datos,int cantidad_datos)
+{
+  double resultadoRuidoTotal = 0;
+  for (int i = 0; i < cantidad_datos; i++)
+  {
+    resultadoRuidoTotal = datos[i] -> ruido + resultadoRuidoTotal;
+  }
+  return resultadoRuidoTotal;
+}*/
+
+
+
+
+
+
 
 /*
 void* procesarDatosSimples(void* param1)

@@ -7,25 +7,33 @@
 #include <pthread.h>
 
 
-typedef struct datos
+typedef struct Buffer
 {
-  double u;
-  double v;
   double real;
   double imag;
   double ruido;
-} Dato;
+} Buffer;
 
-typedef struct hebras
+
+typedef struct Resultados
 {
-  int id;
-  Dato** dato;
-  int largo;
-  int bandera;
   double mediaReal;
   double mediaImag;
   double potenciaTotal;
   double ruidoTotal;
-  pthread_mutex_t* mutex;
+} Resultado;
 
-} Hebra;
+
+typedef struct Monitor
+{
+
+  int id;
+  int bandera;
+  int cantidad_datos;
+  Buffer** buffer;
+  pthread_mutex_t mutex;
+  pthread_cond_t bufferNotEmpty;
+  pthread_cond_t bufferNotFull;
+
+
+} Monitor;
