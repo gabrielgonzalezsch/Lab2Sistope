@@ -52,7 +52,7 @@ void escribirArchivo(char* nombreSalida, double** resultados, int c_discos)
   {
     if (resultados[i][2] == 0)
     {
-      fprintf(archivo, "disco %d: \n", i);
+      fprintf(archivo, "disco %d: \n", i+1);
       fprintf(archivo, "Media Real: 0\n");
       fprintf(archivo, "Media Imaginaria: 0\n");
       fprintf(archivo, "Potencia: 0\n");
@@ -68,6 +68,15 @@ void escribirArchivo(char* nombreSalida, double** resultados, int c_discos)
     }
   }
   fclose(archivo);
+}
+
+void escribirEnPantalla(double** resultados, int c_discos)
+{
+  for (int i = 0; i < c_discos; i++)
+  {
+    printf("Soy la hebra %d, y procese %d Visibilidades.\n", i+1, (int) resultados[i][4]);
+  }
+  printf("\n");
 }
 
 void imprimirDatos(Monitor* monitor)
@@ -144,8 +153,9 @@ void* procesarDatos(void* monitor_param) /// FUNCION QUE UTILIZA LA HEBRA HIJA
       datosTotales = datosTotales + monitor -> cantidad_datos;
       resultados[monitor -> id][0] = sumReal/datosTotales;
       resultados[monitor -> id][1] = sumImag/datosTotales;
-      resultados[monitor -> id][2] = sumRuido;
-      resultados[monitor -> id][3] = sqrt((sumReal*sumReal)+(sumImag*sumImag));
+      resultados[monitor -> id][2] = sqrt((sumReal*sumReal)+(sumImag*sumImag));
+      resultados[monitor -> id][3] = sumRuido;
+      resultados[monitor -> id][4] = datosTotales;
 
       break;
     }

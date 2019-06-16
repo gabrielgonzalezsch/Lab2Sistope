@@ -20,7 +20,7 @@ int main(int argc, char** argv)
   int tamanioBuffer = -1;
   int bFLag = -1;
 
-
+  //getopt
   while ((opt = getopt(argc, argv, ":iondsb:x")) != -1)
   {
     switch (opt)
@@ -34,7 +34,7 @@ int main(int argc, char** argv)
         printf("salida .txt: %s\n", nombreSalida);
         break;
       case 'n':
-        if (atoi(argv[6]) > 0)
+        if (atoi(argv[6]) >= 0)
         {
           c_discos = atoi(argv[6]);
           printf("Numero de discos: %d\n", c_discos);
@@ -53,7 +53,7 @@ int main(int argc, char** argv)
         if (atoi(argv[10]) > 0)
         {
           tamanioBuffer = atoi(argv[10]);
-          printf("Numero de discos: %d\n", tamanioBuffer);
+          printf("Tamanio de buffer: %d\n", tamanioBuffer);
         }
         else
         {
@@ -82,59 +82,72 @@ int main(int argc, char** argv)
   printf("\n");
 
 
-  //INICIALIZAR lista global compartida
-  resultados = (double**) malloc(sizeof(double*)*c_discos);
-
-  for (int i = 0; i < c_discos; i++)
+  if (c_discos <= 0)
   {
-    resultados[i] = (double*) malloc(sizeof(double)*4);
-    resultados[i][0] = 0;
-    resultados[i][1] = 0;
-    resultados[i][2] = 0;
-    resultados[i][3] = 0;
-
+    printf("La cantidad de discos debe ser mayor o igual a 0\n");
+    return 0;
   }
-
-  Monitor** monitores = (Monitor**)malloc(sizeof(Monitor*)*c_discos);
-  pthread_t  hebras[c_discos];
-
-  // INICIALIZAR HEBRAS CONSUMIDORES HIJAS
-  for (int i = 0; i < c_discos; i++)
+  else
   {
-    // INICIALIZAR Monitor
-    monitores[i] = (Monitor*)malloc(sizeof(Monitor));
-    pthread_cond_init(&monitores[i] -> bufferNotFull, NULL);
-    pthread_cond_init(&monitores[i] -> bufferFull, NULL);
-    pthread_mutex_init(&monitores[i] -> mutex, NULL);
+    //INICIALIZAR lista global compartida
+    resultados = (double**) malloc(sizeof(double*)*c_discos);
 
-    // INICIALIZAR BUFFER
-    monitores[i] -> buffer = (Buffer**) malloc(sizeof(Buffer*) * tamanioBuffer);
-    for (int j = 0; j < tamanioBuffer; j++) {
-      monitores[i] -> buffer[j] =(Buffer*) malloc(sizeof(Buffer));
+    for (int i = 0; i < c_discos; i++)
+    {
+      resultados[i] = (double*) malloc(sizeof(double)*5);
+      resultados[i][0] = 0;
+      resultados[i][1] = 0;
+      resultados[i][2] = 0;
+      resultados[i][3] = 0;
+      resultados[i][4] = 0;
     }
-    monitores[i] -> id = i;
-    monitores[i] -> bandera = 0;
-    //pthread_mutex_lock(&mutex);
-    //pthread_mutex_unlock(&mutex);
+
+    Monitor** monitores = (Monitor**)malloc(sizeof(Monitor*)*c_discos);
+    pthread_t  hebras[c_discos];
+
+    // INICIALIZAR HEBRAS CONSUMIDORES HIJAS
+    for (int i = 0; i < c_discos; i++)
+    {
+      // INICIALIZAR Monitor
+      monitores[i] = (Monitor*)malloc(sizeof(Monitor));
+      pthread_cond_init(&monitores[i] -> bufferNotFull, NULL);
+      pthread_cond_init(&monitores[i] -> bufferFull, NULL);
+      pthread_mutex_init(&monitores[i] -> mutex, NULL);
+
+      // INICIALIZAR BUFFER
+      monitores[i] -> buffer = (Buffer**) malloc(sizeof(Buffer*) * tamanioBuffer);
+      for (int j = 0; j < tamanioBuffer; j++) {
+        monitores[i] -> buffer[j] =(Buffer*) malloc(sizeof(Buffer));
+      }
+      monitores[i] -> id = i;
+      monitores[i] -> bandera = 0;
+    }
+
+    //Creando hebras
+    for (int i = 0; i < c_discos; i++)
+    {
+      pthread_create(&hebras[i], NULL, procesarDatos, (void*)monitores[i]);
+    }
+
+    leerArchivo(monitores, nombre, anchoDisco, c_discos, tamanioBuffer);
+
+    //Esperando hijos
+    for (int i = 0; i < c_discos; i++)
+    {
+      pthread_join(hebras[i],NULL);
+    }
+
+    //Escribiendo datos
+
+    escribirArchivo(nombreSalida, resultados, c_discos);
+
+    if (bFLag == 1)
+    {
+      escribirEnPantalla(resultados, c_discos);
+    }
+
+    printf("Procesamiento de Visibilidades listo.\n");
+
+    return 0;
   }
-
-  //Creando hebras
-  for (int i = 0; i < c_discos; i++)
-  {
-    pthread_create(&hebras[i], NULL, procesarDatos, (void*)monitores[i]);
-  }
-
-  leerArchivo(monitores, nombre, anchoDisco, c_discos, tamanioBuffer);
-
-  //Esperando hijos
-  for (int i = 0; i < c_discos; i++)
-  {
-    pthread_join(hebras[i],NULL);
-  }
-
-  //Escribiendo datos
-
-  escribirArchivo(nombreSalida, resultados, c_discos);
-
-  return 0;
 }

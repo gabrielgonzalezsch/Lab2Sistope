@@ -1,25 +1,5 @@
 disco 0: 
-Media Real: -nan
-Media Imaginaria: -nan
-Potencia: 0.000000
-Ruido Total: 0.000000
-disco 1: 
-Media Real: -nan
-Media Imaginaria: -nan
-Potencia: 0.000000
-Ruido Total: 0.000000
-disco 2: 
-Media Real: -605.068115
-Media Imaginaria: -15.029492
-Potencia: 0.010329
-Ruido Total: 1210.509495
-disco 3: 
-Media Real: -67.137222
-Media Imaginaria: -46.092587
-Potencia: 0.009501
-Ruido Total: 162.873364
-disco 4: 
-Media Real: 8.536682
-Media Imaginaria: -6.317325
-Potencia: 0.075877
-Ruido Total: 169.919345
+Media Real: -10.059962
+Media Imaginaria: -1.380364
+Potencia: 1091518.028950
+Ruido Total: 404.490298

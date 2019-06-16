@@ -21,3 +21,5 @@ void leerArchivo(Monitor** monitores,char* nombre, int anchoDisco,int c_discos, 
 void escribirArchivo(char* nombreSalida, double** resultados, int c_discos);
 
 void* procesarDatos(void* param);
+
+void escribirEnPantalla(double** resultados, int c_discos);
