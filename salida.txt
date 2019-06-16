@@ -1,0 +1,25 @@
+disco 0: 
+Media Real: 0.000000
+Media Imaginaria: 0.000000
+Potencia: 0.000000
+Ruido Total: 0.000000
+disco 1: 
+Media Real: 0.000000
+Media Imaginaria: 0.000000
+Potencia: 0.000000
+Ruido Total: 0.000000
+disco 2: 
+Media Real: 0.000000
+Media Imaginaria: 0.000000
+Potencia: 0.000000
+Ruido Total: 0.000000
+disco 3: 
+Media Real: 0.000000
+Media Imaginaria: 0.000000
+Potencia: 0.000000
+Ruido Total: 0.000000
+disco 4: 
+Media Real: 0.000000
+Media Imaginaria: 0.000000
+Potencia: 0.000000
+Ruido Total: 0.000000

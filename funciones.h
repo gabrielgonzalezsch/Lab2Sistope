@@ -3,14 +3,16 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+Resultado** resultados;
+
 int largoArchivo(char* nombre);
 
 int calcularDisco(double u, double v, double ancho, int c_discos);
+
 void imprimirDatos(Monitor* monitor);
 
-/*
-void* procesarDatosSimples(void* param1);
+void leerArchivo(Monitor** monitores,char* nombre, int anchoDisco,int c_discos, int tamanioBuffer);
 
-void* imprimirDatos(void* param);
-*/
+void escribirArchivo(char* nombreSalida, Resultado** resultados, int c_discos);
+
 void* procesarDatos(void* param);

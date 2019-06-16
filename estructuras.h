@@ -6,6 +6,9 @@
 #include <string.h>
 #include <pthread.h>
 
+//variable global compartida
+
+
 
 typedef struct Buffer
 {
@@ -26,14 +29,11 @@ typedef struct Resultados
 
 typedef struct Monitor
 {
-
   int id;
   int bandera;
   int cantidad_datos;
   Buffer** buffer;
   pthread_mutex_t mutex;
-  pthread_cond_t bufferNotEmpty;
+  pthread_cond_t bufferFull;
   pthread_cond_t bufferNotFull;
-
-
 } Monitor;
