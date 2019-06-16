@@ -3,7 +3,12 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-Resultado** resultados;
+#ifndef GLOBAL_VARIABLES
+#define GLOBAL_VARIABLES
+
+double** resultados;
+
+#endif
 
 int largoArchivo(char* nombre);
 
@@ -13,6 +18,6 @@ void imprimirDatos(Monitor* monitor);
 
 void leerArchivo(Monitor** monitores,char* nombre, int anchoDisco,int c_discos, int tamanioBuffer);
 
-void escribirArchivo(char* nombreSalida, Resultado** resultados, int c_discos);
+void escribirArchivo(char* nombreSalida, double** resultados, int c_discos);
 
 void* procesarDatos(void* param);

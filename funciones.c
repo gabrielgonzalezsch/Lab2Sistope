@@ -44,17 +44,28 @@ int calcularDisco(double u,double v,double ancho, int c_discos)
 
 }
 
-void escribirArchivo(char* nombreSalida, Resultado** resultados, int c_discos)
+void escribirArchivo(char* nombreSalida, double** resultados, int c_discos)
 {
   FILE* archivo = fopen(nombreSalida,"w");
 
   for (int i = 0; i < c_discos; i++)
   {
-    fprintf(archivo, "disco %d: \n", i);
-    fprintf(archivo, "Media Real: %f\n", resultados[i] -> mediaReal);
-    fprintf(archivo, "Media Imaginaria: %f\n", resultados[i] -> mediaImag);
-    fprintf(archivo, "Potencia: %f\n", resultados[i] -> potenciaTotal);
-    fprintf(archivo, "Ruido Total: %f\n", resultados[i] -> ruidoTotal);
+    if (resultados[i][2] == 0)
+    {
+      fprintf(archivo, "disco %d: \n", i);
+      fprintf(archivo, "Media Real: 0\n");
+      fprintf(archivo, "Media Imaginaria: 0\n");
+      fprintf(archivo, "Potencia: 0\n");
+      fprintf(archivo, "Ruido Total: 0\n");
+    }
+    else
+    {
+      fprintf(archivo, "disco %d: \n", i);
+      fprintf(archivo, "Media Real: %f\n", resultados[i][0]);
+      fprintf(archivo, "Media Imaginaria: %f\n", resultados[i][1]);
+      fprintf(archivo, "Potencia: %f\n", resultados[i][2]);
+      fprintf(archivo, "Ruido Total: %f\n", resultados[i][3]);
+    }
   }
   fclose(archivo);
 }
@@ -81,26 +92,18 @@ void* procesarDatos(void* monitor_param) /// FUNCION QUE UTILIZA LA HEBRA HIJA
   int datosTotales = 0;
 
   while(1){
-    //printf("HOLA");
-    //pthread_mutex_lock(&monitor -> mutex);
-
     if (monitor -> bandera == 0)
     {
       //printf("INFO: %d,%d,%d\n",monitor->id,monitor->cantidad_datos,monitor->bandera);
-      //printf("ME MUERO\n ");
       pthread_cond_wait(&monitor -> bufferNotFull, &monitor -> mutex);
     }
 
     else if(monitor -> bandera == 1)
     {
 
-      //pthread_cond_signal(&monitor -> bufferFull);
-      printf("INFO BANDERA 1: %d,%d,%d\n",monitor->id,monitor->cantidad_datos,monitor->bandera);
-      //printf("BANDERA == 1\n");
-      //imprimirDatos(monitor);
+      //printf("INFO BANDERA 1: %d,%d,%d\n",monitor->id,monitor->cantidad_datos,monitor->bandera);
 
       //pthread_mutex_lock(&monitor -> mutex);
-      printf("mutex bloqueado\n");
 
       for (int i = 0; i < monitor -> cantidad_datos; i++)
       {
@@ -111,76 +114,44 @@ void* procesarDatos(void* monitor_param) /// FUNCION QUE UTILIZA LA HEBRA HIJA
 
       datosTotales = datosTotales + monitor -> cantidad_datos;
 
-      /*
-      printf("final monitor id: %d\n", monitor -> id);
-      printf("sumaReal: %f\n", sumReal);
-      printf("sumaImag: %f\n", sumImag);
-      printf("sumaRuido: %f\n", sumRuido);
-      */
-
       for (int i = 0; i < monitor -> cantidad_datos; i++)
       {
-        //printf("RIP\n ");
         monitor -> buffer[i]-> real = 0;
-        //printf("holi3\n");
         monitor -> buffer[i] -> imag = 0;
-        //printf("holi4\n");
         monitor -> buffer[i] -> ruido = 0;
-        //printf("holi5\n");
       }
-      //printf("RIP\n ");
 
       monitor -> cantidad_datos = 0;
       monitor -> bandera = 0;
 
-      printf("datos guardados y borrados, mandando señal a bufferFull y desbloqueando mutex\n");
 
       pthread_cond_signal(&monitor -> bufferFull);
       //pthread_mutex_unlock(&monitor -> mutex);
-      printf("mutex desbloqueado\n");
-
-
-
-      //pthread_mutex_unlock(&monitor -> mutex);
-      //pthread_cond_wait(&monitor -> bufferFull, &monitor -> mutex);
 
     }
 
     else if(monitor -> bandera == 2)
     {
-      //printf("BANDERA == 2\n");
-      //imprimirDatos(monitor);
-      printf("INFO BANDERA 2: %d,%d,%d\n",monitor->id,monitor->cantidad_datos,monitor->bandera);
+      //printf("INFO BANDERA 2: %d,%d,%d\n",monitor->id,monitor->cantidad_datos,monitor->bandera);
       //ultima lectura
       for (int i = 0; i < monitor -> cantidad_datos; i++)
       {
-        printf("vuelta %d\n", i);
         sumReal = sumReal + monitor -> buffer[i] -> real;
         sumImag = sumImag + monitor -> buffer[i] -> imag;
         sumRuido = sumRuido + monitor -> buffer[i] -> ruido;
-        printf("vuelta %d lista\n", i);
       }
 
       datosTotales = datosTotales + monitor -> cantidad_datos;
-      printf("resultados\n");
-      printf("id: %d\n", monitor -> id);
-      resultados[monitor -> id] -> mediaReal = sumReal/datosTotales;
-      resultados[monitor -> id] -> mediaImag = sumImag/datosTotales;
-      resultados[monitor -> id] -> ruidoTotal = sumRuido;
-      resultados[monitor -> id] -> potenciaTotal = sqrt((sumReal*sumReal)+(sumImag*sumImag));
-      printf("resultados listos\n");
-      /*
-      printf("final monitor id: %d\n", monitor -> id);
-      printf("sumaReal: %f\n", sumReal);
-      printf("sumaImag: %f\n", sumImag);
-      printf("sumaRuido: %f\n", sumRuido);
-        */
+      resultados[monitor -> id][0] = sumReal/datosTotales;
+      resultados[monitor -> id][1] = sumImag/datosTotales;
+      resultados[monitor -> id][2] = sumRuido;
+      resultados[monitor -> id][3] = sqrt((sumReal*sumReal)+(sumImag*sumImag));
+
       break;
     }
 
   }
 
-  printf("matando hebra\n");
 }
 
 void leerArchivo(Monitor** monitores,char* nombre, int anchoDisco,int c_discos, int tamanioBuffer)
@@ -206,29 +177,18 @@ void leerArchivo(Monitor** monitores,char* nombre, int anchoDisco,int c_discos, 
       //printf("%lf %lf %lf %lf %lf\n", u,v,real,imag,ruido);
 
       disco = calcularDisco(u, v, anchoDisco, c_discos);
-      printf("disco: %d\n", disco);
-      printf("id: %d\n", monitores[disco] -> id);
 
       pthread_mutex_lock(&monitores[disco] -> mutex);
 
       while (monitores[disco] -> cantidad_datos == tamanioBuffer)
       {
-        printf("WOLOLO\n");
-
         pthread_cond_wait(&monitores[disco] -> bufferFull,&monitores[disco] -> mutex);
-        printf("sali\n");
       }
 
       posicion = monitores[disco] -> cantidad_datos;
-      printf("seteando real\n");
       monitores[disco] -> buffer[posicion] -> real = real;
-      //printf("seteando imag\n");
       monitores[disco] -> buffer[posicion] -> imag = imag;
-      //printf("seteando ruido\n");
       monitores[disco] -> buffer[posicion] -> ruido = ruido;
-
-      //imprimirDatos(monitores[disco]);
-      printf("seteando cantidad_datos: %d\n", monitores[disco]->cantidad_datos);
 
       posicion = posicion + 1;
       monitores[disco] -> cantidad_datos = posicion;
@@ -236,7 +196,6 @@ void leerArchivo(Monitor** monitores,char* nombre, int anchoDisco,int c_discos, 
       if (monitores[disco] -> cantidad_datos == tamanioBuffer)
       {
         monitores[disco] -> bandera = 1;
-        printf("bandera = 1\n");
       }
       pthread_cond_signal(&monitores[disco] -> bufferNotFull);
       pthread_mutex_unlock(&monitores[disco] -> mutex);
@@ -245,58 +204,10 @@ void leerArchivo(Monitor** monitores,char* nombre, int anchoDisco,int c_discos, 
 
   for (int i = 0; i < c_discos; i++)
   {
-    printf("bandera 2\n");
     monitores[i] -> bandera =  2;
     pthread_cond_signal(&monitores[i] -> bufferNotFull);
-    printf("esperando hebra hija\n");
     //pthread_cond_wait(&monitores[disco] -> bufferNotFull, &monitores[disco] -> mutex);
-    //printf("durmiendo padre\n");
   }
 
   fclose(archivo);
 }
-
-/*double calcularMediaReal(Dato** datos, int cantidad_datos)
-{
-  double resultadoMediaReal = 0;
-  for (int i = 0; i < cantidad_datos; i++)
-  {
-    resultadoMediaReal = datos[i] -> real + resultadoMediaReal;
-  }
-
-  resultadoMediaReal = resultadoMediaReal/cantidad_datos;
-  return resultadoMediaReal;
-}
-
-double calcularMediaImaginaria(Dato** datos,int cantidad_datos)
-{
-  double resultadoMediaImaginaria = 0;
-  for (int i = 0; i < cantidad_datos; i++)
-  {
-    resultadoMediaImaginaria = datos[i] -> imag + resultadoMediaImaginaria;
-  }
-
-  resultadoMediaImaginaria = resultadoMediaImaginaria/cantidad_datos;
-  return resultadoMediaImaginaria;
-}
-
-double calcularPotenciaTotal(Dato** datos,int cantidad_datos)
-{
-  double resultadoPotenciaTotal = 0;
-  for (int i = 0; i < cantidad_datos; i++)
-  {
-    double potencia = sqrt( (datos[i] -> real * datos[i] -> real) + (datos[i] -> imag * datos[i] -> imag) );
-    resultadoPotenciaTotal = potencia + resultadoPotenciaTotal;
-  }
-  return resultadoPotenciaTotal;
-}
-
-double calcularRuidoTotal(Dato** datos,int cantidad_datos)
-{
-  double resultadoRuidoTotal = 0;
-  for (int i = 0; i < cantidad_datos; i++)
-  {
-    resultadoRuidoTotal = datos[i] -> ruido + resultadoRuidoTotal;
-  }
-  return resultadoRuidoTotal;
-}*/

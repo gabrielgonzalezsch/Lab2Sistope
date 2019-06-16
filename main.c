@@ -8,21 +8,91 @@
 pthread_mutex_t *mutex;
 
 
-int main(int argc, char const *argv[])
+int main(int argc, char** argv)
 {
-  char* nombre = "test.csv";
-  char* nombreSalida = "salida.txt";
-  int c_discos = 5;
-  int anchoDisco = 10;
-  int bandera = 0;  // 0 no mostrar en pantalla y 1 mostrar en pantalla
+  int opt;
   int largo;
-  int tamanioBuffer = 2;
+
+  char* nombre =  (char*) malloc(sizeof(char*) * 20);
+  char* nombreSalida =  (char*) malloc(sizeof(char*) * 20);
+  int c_discos = -1;
+  int anchoDisco = -1;
+  int tamanioBuffer = -1;
+  int bFLag = -1;
+
+
+  while ((opt = getopt(argc, argv, ":iondsb:x")) != -1)
+  {
+    switch (opt)
+    {
+      case 'i':
+        strcpy(nombre, argv[2]);
+        printf("entrada .csv: %s\n", nombre);
+        break;
+      case 'o':
+        strcpy(nombreSalida, argv[4]);
+        printf("salida .txt: %s\n", nombreSalida);
+        break;
+      case 'n':
+        if (atoi(argv[6]) > 0)
+        {
+          c_discos = atoi(argv[6]);
+          printf("Numero de discos: %d\n", c_discos);
+        }
+        else
+        {
+          printf("El valor ingresado en \"numero de discos\" es invalido\n");
+          exit(1);
+        }
+        break;
+      case 'd':
+        anchoDisco = atoi(argv[8]);
+        printf("ancho: %d\n", anchoDisco);
+        break;
+      case 's':
+        if (atoi(argv[10]) > 0)
+        {
+          tamanioBuffer = atoi(argv[10]);
+          printf("Numero de discos: %d\n", tamanioBuffer);
+        }
+        else
+        {
+          printf("El valor ingresado en \"tamaño buffer\" es invalido\n");
+          exit(1);
+        }
+        break;
+      case 'b':
+        bFLag = atoi(argv[12]);
+        printf("bandera: %d\n", bFLag);
+        break;
+      case ':':
+        printf("option needs a value\n");
+        break;
+      case '?':
+        printf("unknown option: %c\n", optopt);
+        break;
+    }
+  }
+
+  // Este for captura los elementos extra del argumento
+  for(optind = 12; optind < argc; optind++){
+      printf("extra arguments: %s\n", argv[optind]);
+  }
+
+  printf("\n");
+
 
   //INICIALIZAR lista global compartida
-  Resultado** resultados = (Resultado**) malloc(sizeof(Resultado*)*c_discos);
+  resultados = (double**) malloc(sizeof(double*)*c_discos);
+
   for (int i = 0; i < c_discos; i++)
   {
-    resultados[i] = (Resultado*) malloc(sizeof(Resultado));
+    resultados[i] = (double*) malloc(sizeof(double)*4);
+    resultados[i][0] = 0;
+    resultados[i][1] = 0;
+    resultados[i][2] = 0;
+    resultados[i][3] = 0;
+
   }
 
   Monitor** monitores = (Monitor**)malloc(sizeof(Monitor*)*c_discos);
@@ -59,26 +129,12 @@ int main(int argc, char const *argv[])
   //Esperando hijos
   for (int i = 0; i < c_discos; i++)
   {
-    printf("esperanding %d\n", monitores[i] -> id);
     pthread_join(hebras[i],NULL);
-    printf("hebra %d finalizada\n", monitores[i] -> id);
   }
 
   //Escribiendo datos
-  for (int i = 0; i < c_discos; i++)
-  {
-    escribirArchivo(nombreSalida, resultados, c_discos);
-  }
 
-
-  /*int i = 0;
-  while (i < c_discos)
-  {
-    //pthread_mutex_lock(&mutex);
-    pthread_create(&hilo[i], NULL, procesarDatos, (void *) hebras[i]);
-    //pthread_mutex_unlock(&mutex);
-    i++;
-  }*/
+  escribirArchivo(nombreSalida, resultados, c_discos);
 
   return 0;
 }
